@@ -1,6 +1,12 @@
-use of SoC for ui, logic, network and local data (for keys and contact list)
-contact list can be uinque identifiers for users (that get broadcasted across lan to find others) and perhaps locally saved/downloaded pfp
-yap about archtectures and frameworks: CRUD, UI/Logic/DAL 3-layer (SoC), p2p networking, key exchange, cryptography, general networking and data security
-Talk about decisions to preserve or not on RAM usage via having classes initialized when not in use and such ig
+## General notes
+* Use of seperation-of-concern (SoC) for UI (PL), logic and networking (BL), & local save data (DL)
+* Save data will be
+    1. User information, here own display name & public key
+    2. Contact list, here each contact's display name, user-set nickname, & their public key
+* Users can do peer discovery by broadcasting across their contact info over LAN so other LanChat users can discover them
 
-structure/layout:
+## Program structure & layout
+* CRUD framework utilized for both the local user & contacts in contact list
+* SoC 3-layer architecture utilized for simplicity
+* Peer-to-peer (P2P) networking over LAN for communication with messaging peers
+* Diffie-Hellman (DH) key exchange handshake for encrypted messaging
