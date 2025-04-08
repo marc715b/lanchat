@@ -1,0 +1,15 @@
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.GeneratedMSBuildEditorConfig.editorconfig
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.AssemblyInfoInputs.cache
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.AssemblyInfo.cs
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.csproj.CoreCompileInputs.cache
+C:\dev\lanchat\console-test\bin\Debug\net8.0\console-test.exe
+C:\dev\lanchat\console-test\bin\Debug\net8.0\console-test.deps.json
+C:\dev\lanchat\console-test\bin\Debug\net8.0\console-test.runtimeconfig.json
+C:\dev\lanchat\console-test\bin\Debug\net8.0\console-test.dll
+C:\dev\lanchat\console-test\bin\Debug\net8.0\console-test.pdb
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.dll
+C:\dev\lanchat\console-test\obj\Debug\net8.0\refint\console-test.dll
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.pdb
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.genruntimeconfig.cache
+C:\dev\lanchat\console-test\obj\Debug\net8.0\ref\console-test.dll
+C:\dev\lanchat\console-test\obj\Debug\net8.0\console-test.sourcelink.json
