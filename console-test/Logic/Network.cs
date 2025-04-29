@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -90,19 +91,21 @@ namespace console_test.Logic
       _networkStream = _tcpClient.GetStream();
     }
 
-    // Test for now. TODO: pass msg as bytes
-    // async?
-    public void Send(string msg)
+    public string GetIp()
     {
-      var buffer = Encoding.UTF8.GetBytes(msg);
+      return _tcpClient.ToString();
+    }
+
+    public void Send(byte[] buffer)
+    {
       _networkStream.Write(buffer, 0, buffer.Length);
     }
 
-    public void Listen()
+    public byte[] Listen()
     {
       Console.WriteLine("Listening to TCP socket from " + _tcpClient.ToString());
 
-      MemoryStream messageStream = new MemoryStream();
+      using MemoryStream messageStream = new MemoryStream();
       byte[] buffer = new byte[65535];
       int bytesRead;
 
@@ -111,19 +114,22 @@ namespace console_test.Logic
         while ((bytesRead = _networkStream.Read(buffer, 0, buffer.Length)) > 0)
         {
           messageStream.Write(buffer, 0, bytesRead);
-
-          // Print debug info
-          byte[] data = messageStream.ToArray();
-          string msg = Encoding.UTF8.GetString(data);
-
-          Console.WriteLine($"Received message from {_tcpClient.ToString()}:\n\t{msg}");
-
-          messageStream.SetLength(0);
         }
+        
+        // Print debug info
+        byte[] data = messageStream.ToArray();
+        string msg = Encoding.UTF8.GetString(data);
+
+        Console.WriteLine($"Received message from {_tcpClient.ToString()}:\n\t{msg}");
+
+        messageStream.SetLength(0);
+
+        return data;
       }
       catch (Exception ex)
       {
         Console.WriteLine($"Error while listening to socket: {ex.Message}");
+        return null;
       }
     }
   }
