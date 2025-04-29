@@ -5,26 +5,71 @@ namespace console_test
   static class Program
   {
     private static Network _network = new Network();
-    
-    public static void Main(string[] args)
+    private static List<Session> _sessions = new List<Session>();
+
+    private static void listenTcp()
     {
-      // Start listening for UDP broadcasts
-      Task listenerTask = Task.Run(async () =>
+      _network.StartListener();
+
+      Task tcpListenerTask = Task.Run(() =>
       {
         while (true)
         {
-          Contact contact = await _network.ListenBroadcast();
-          Console.WriteLine($"Got new contact:\n\tName: {contact.GetName()}\n\tPub key: {contact.GetPubKey()}\n\tIP: {contact.GetIp()}");
+          Session session = _network.ListenSessions();
+
+          Task.Run(() =>
+          {
+            _sessions.Add(session);
+
+            Console.Write("Sending test text: ");
+            session.Send(Console.ReadLine());
+
+            // Start a blocking listen
+            session.Listen();
+          });
+        }
+
+        _network.StopListener();
+      });
+    }
+
+    private static Task listenUdp()
+    {
+      Task udpListenerTask = Task.Run(() =>
+      {
+        while (true)
+        {
+          Contact contact = _network.ListenBroadcast();
+          Task.Run(() =>
+          {
+            // Open a new TCP connection to the contact
+            Session session = new Session(contact);
+
+            _sessions.Add(session);
+
+            session.Send("Outgoing connection send test");
+
+            // Start a blocking listen
+            session.Listen();
+          });
         }
       });
+
+      return udpListenerTask;
+    }
+
+    public static void Main(string[] args)
+    {
+      // Listen for incoming TCP connections (sessions)
+      listenTcp();
+      
+      // Listen for incoming UDP broadcasts (peer announcements)
+      Task udpListenerTask = listenUdp();
 
       // Send out a test broadcast
       _network.Broadcast("TestUsername123", "28701b10ed531c2107f973954e3dde5f28dcc07c06f211c385e6be8a5defe3107");
 
-      // Send out another test broadcast
-      // _network.Broadcast("1DebugAccount", "90894f84e80fe4561530d68da3bae3d42bb750a3e336a62c2b6a6e0a58bfc11ae");
-
-      listenerTask.Wait();
+      udpListenerTask.Wait();
     }
   }
 }

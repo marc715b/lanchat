@@ -68,17 +68,85 @@ namespace console_test.Logic
     }
   }
 
+  internal class Session
+  {
+    private TcpClient _tcpClient;
+    private NetworkStream _networkStream;
+
+    // Outgoing session (we connect to other party)
+    public Session(Contact contact)
+    {
+      Console.WriteLine("Creating session from Contact: " + contact.GetIp());
+
+      _tcpClient = new TcpClient(contact.GetIp(), Network.SESSION_PORT);
+      _networkStream = _tcpClient.GetStream()
+    }
+
+    // Incoming session (other party connects to us)
+    public Session(TcpClient tcpClient)
+    {
+      Console.WriteLine("Creating session from TcpClient: " + tcpClient.ToString());
+
+      _tcpClient = tcpClient;
+      _networkStream = _tcpClient.GetStream();
+    }
+
+    // Test for now. TODO: pass msg as bytes
+    // async?
+    public void Send(string msg)
+    {
+      var buffer = Encoding.UTF8.GetBytes(msg);
+      _networkStream.Write(buffer, 0, buffer.Length);
+    }
+
+    public void Listen()
+    {
+      Console.WriteLine("Listening to TCP socket from " + _tcpClient.ToString());
+
+      MemoryStream messageStream = new MemoryStream();
+      byte[] buffer = new byte[65535];
+      int bytesRead;
+
+      try
+      {
+        while ((bytesRead = _networkStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+          messageStream.Write(buffer, 0, bytesRead);
+
+          // Print debug info
+          byte[] data = messageStream.ToArray();
+          string msg = Encoding.UTF8.GetString(data);
+
+          Console.WriteLine($"Received message from {_tcpClient.ToString()}:\n\t{msg}");
+
+          messageStream.SetLength(0);
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error while listening to socket: {ex.Message}");
+      }
+    }
+  }
+
   internal class Network
   {
-    private static readonly int BROADCAST_PORT = 420;
+    public static readonly int BROADCAST_PORT = 420;
+    public static readonly int SESSION_PORT = 421;
 
     private IPEndPoint _broadcastIp;
 
     private UdpClient _udpSendClient;
     private UdpClient _udpRcvClient;
 
+    private TcpListener _tcpListener;
+
     public Network()
     {
+      // Initialize TCP stuff
+      _tcpListener = new TcpListener(IPAddress.Any, SESSION_PORT);
+
+      // Initialize UDP stuff
       _udpSendClient = new UdpClient();
       _udpSendClient.EnableBroadcast = true;
 
@@ -94,7 +162,7 @@ namespace console_test.Logic
 
       Console.WriteLine($"Broadcasting on port {BROADCAST_PORT}");
 
-      try {  
+      try {
         int sent = _udpSendClient.Send(broadcastBuffer, broadcastBuffer.Length, _broadcastIp);
         Console.WriteLine($"Broadcast sent {sent}/{broadcastBuffer.Length} bytes");
       } 
@@ -104,7 +172,7 @@ namespace console_test.Logic
       }
     }
 
-    public async Task<Contact> ListenBroadcast()
+    public Contact ListenBroadcast()
     {
       Console.WriteLine($"Listening for broadcasts on port {BROADCAST_PORT}");
 
@@ -134,12 +202,34 @@ namespace console_test.Logic
         string user = entries[0];
         string pubKey = entries[1];
 
+        // TEMP: hardcoded
+        if (user == "TestUsername123")
+          continue;
+
         // Print some debug information
         Console.WriteLine($"Received broadcast: {msg}\n\tSender: {remoteIp.ToString()}\n\tUsername: {user}\n\tPub key: {pubKey}");
 
         // Return a new Contact object for this user
         return new Contact(user, ip, pubKey);
       }
+    }
+
+    // Really bad ABI, but eh
+    public void StartListener()
+    {
+      _tcpListener.Start();
+    }
+
+    public void StopListener()
+    {
+      _tcpListener.Stop();
+    }
+
+    public Session ListenSessions()
+    {
+      Console.WriteLine($"Listening for TCP connections on {SESSION_PORT}");
+
+      return new Session(_tcpListener.AcceptTcpClient());
     }
   }
 }
