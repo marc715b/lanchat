@@ -79,7 +79,7 @@ namespace console_test.Logic
       Console.WriteLine("Creating session from Contact: " + contact.GetIp());
 
       _tcpClient = new TcpClient(contact.GetIp(), Network.SESSION_PORT);
-      _networkStream = _tcpClient.GetStream()
+      _networkStream = _tcpClient.GetStream();
     }
 
     // Incoming session (other party connects to us)
