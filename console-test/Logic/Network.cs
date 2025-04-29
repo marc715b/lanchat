@@ -42,8 +42,7 @@ namespace console_test.Logic
 
     public void SetIp(string ip)
     {
-      IPAddress tempAddress;
-      if (!IPAddress.TryParse(ip, out tempAddress))
+      if (!IPAddress.TryParse(ip, out _))
         throw new ArgumentException("IP address is invalid");
 
       _ip = ip;
