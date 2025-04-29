@@ -103,13 +103,41 @@ namespace console_test.Logic
       }
     }
 
-
-    public static readonly byte[] CryptKey = new byte[]
+    public static class ECDH
     {
-      0x5b, 0xde, 0x43, 0x0b, 0xde, 0x39, 0x5a, 0x6b,
-      0x73, 0x6f, 0x35, 0x08, 0x4b, 0x65, 0xbb, 0x57,
-      0x8c, 0xf0, 0x2b, 0x36, 0xcb, 0x0a, 0x21, 0xd2,
-      0x4a, 0x87, 0xd4, 0xd1, 0x05, 0x7e, 0x3b, 0xc9
-    }; // todo: ecdh
+      // Quickly and securely generate an ECC keypair
+      public static (byte[] pubKey, byte[] prvKey) GenerateKeypair()
+      {
+        using (ECDiffieHellmanCng ecdh = new ECDiffieHellmanCng())
+        {
+          // Configure the key derivation function
+          ecdh.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
+          ecdh.HashAlgorithm = CngAlgorithm.Sha256;
+
+          return (ecdh.ExportECPrivateKey(), ecdh.PublicKey.ToByteArray());
+        }
+      }
+
+      // Derive the shared secret between two keypairs
+      public static byte[] DeriveKey(byte[] alicePubKey, byte[] alicePrvKey, byte[] bobPubKey)
+      {
+        // Create an ECDH CNG instance
+        using (ECDiffieHellmanCng ecdh = new ECDiffieHellmanCng())
+        {
+          // Import Alice's private key
+          ecdh.ImportECPrivateKey(alicePrvKey, out _);
+
+          // Create a public key object from Bob's public key
+          var bobPubKeyObj = ECDiffieHellmanCngPublicKey.FromByteArray(bobPubKey, CngKeyBlobFormat.EccPublicBlob);
+
+          // Configure the key derivation function for the keying material
+          ecdh.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
+          ecdh.HashAlgorithm = CngAlgorithm.Sha256;
+
+          // Derive the shared secret therefrom
+          return ecdh.DeriveKeyMaterial(bobPubKeyObj);
+        }
+      }
+    }
   }
 }
